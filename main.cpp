@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include "open_addressing.hpp"
+#include "chaining.hpp"
 
 using namespace std;
 
@@ -32,7 +33,8 @@ void testPerformance() {
     
     // Plik wynikow
     ofstream outFile("wyniki.xlsx");
-    outFile << "Rozmiar\tWstawianie (ns)\tUsuwanie (ns)\n";
+    outFile << "Rozmiar\tAdresowanie otwarte Wstawianie (ns)\tLancuchowanie Wstawianie (ns)\t"
+            << "Adresowanie otwarte Usuwanie (ns)\tLancuchowanie Usuwanie (ns)\n";
     
     // Dla kazdego rozmiaru
     for (int s = 0; s < numSizes; s++) {
@@ -40,8 +42,10 @@ void testPerformance() {
         cout << "Testowanie dla rozmiaru: " << size << endl;
         
         // Srednie czasy
-        double avgInsert = 0;
-        double avgRemove = 0;
+        double avgOpenAddressingInsert = 0;
+        double avgChainingInsert = 0;
+        double avgOpenAddressingRemove = 0;
+        double avgChainingRemove = 0;
         
         // Dla kazdego zestawu danych
         for (int dataSet = 0; dataSet < n; dataSet++) {
@@ -61,40 +65,67 @@ void testPerformance() {
             
             // Dla kazdego powtorzenia
             for (int r = 0; r < rep; r++) {
-                // Nowa tablica
-                HashTableOpenAddressing table;
+                // Nowe tablice
+                HashTableOpenAddressing openAddressingTable;
+                HashTableChaining chainingTable;
                 
-                // Test wstawiania
+                // Test wstawiania - adresowanie otwarte
                 auto start = chrono::high_resolution_clock::now();
                 for (int i = 0; i < size; i++) {
-                    table.insert(keys[i], values[i]);
+                    openAddressingTable.insert(keys[i], values[i]);
                 }
                 auto end = chrono::high_resolution_clock::now();
                 auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-                avgInsert += duration / (double)size;
+                avgOpenAddressingInsert += duration / (double)size;
                 
-                // Test usuwania
+                // Test wstawiania - lancuchowanie
                 start = chrono::high_resolution_clock::now();
                 for (int i = 0; i < size; i++) {
-                    table.remove(keys[i]);
+                    chainingTable.insert(keys[i], values[i]);
                 }
                 end = chrono::high_resolution_clock::now();
                 duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-                avgRemove += duration / (double)size;
+                avgChainingInsert += duration / (double)size;
+                
+                // Test usuwania - adresowanie otwarte
+                start = chrono::high_resolution_clock::now();
+                for (int i = 0; i < size; i++) {
+                    openAddressingTable.remove(keys[i]);
+                }
+                end = chrono::high_resolution_clock::now();
+                duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+                avgOpenAddressingRemove += duration / (double)size;
+                
+                // Test usuwania - lancuchowanie
+                start = chrono::high_resolution_clock::now();
+                for (int i = 0; i < size; i++) {
+                    chainingTable.remove(keys[i]);
+                }
+                end = chrono::high_resolution_clock::now();
+                duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+                avgChainingRemove += duration / (double)size;
             }
         }
         
         // Oblicz srednie
-        avgInsert /= (n * rep);
-        avgRemove /= (n * rep);
+        avgOpenAddressingInsert /= (n * rep);
+        avgChainingInsert /= (n * rep);
+        avgOpenAddressingRemove /= (n * rep);
+        avgChainingRemove /= (n * rep);
         
         // Zapisz wyniki
-        outFile << size << "\t" << avgInsert << "\t" << avgRemove << "\n";
+        outFile << size << "\t"
+                << avgOpenAddressingInsert << "\t"
+                << avgChainingInsert << "\t"
+                << avgOpenAddressingRemove << "\t"
+                << avgChainingRemove << "\n";
         
         // Wyswietl wyniki
         cout << "  Wyniki dla rozmiaru " << size << ":" << endl;
-        cout << "    Wstawianie: " << avgInsert << " ns" << endl;
-        cout << "    Usuwanie: " << avgRemove << " ns" << endl;
+        cout << "    Adresowanie otwarte Wstawianie: " << avgOpenAddressingInsert << " ns" << endl;
+        cout << "    Lancuchowanie Wstawianie: " << avgChainingInsert << " ns" << endl;
+        cout << "    Adresowanie otwarte Usuwanie: " << avgOpenAddressingRemove << " ns" << endl;
+        cout << "    Lancuchowanie Usuwanie: " << avgChainingRemove << " ns" << endl;
     }
     
     outFile.close();
@@ -131,11 +162,10 @@ void mainMenu() {
 }
 
 int main() {
-     cout << "SLOWNIK OPARTY NA TABLICY MIESZAJACEJ ===" << endl;
+    cout << "=== SLOWNIK OPARTY NA TABLICY MIESZAJACEJ ===" << endl;
     cout << "1. Tablica mieszajaca z adresowaniem otwartym" << endl;
-    cout << "2. WIP Tablica mieszajaca z lancuchowaniem (listy powiazane)" << endl;
+    cout << "2. Tablica mieszajaca z lancuchowaniem" << endl;
     cout << "3. WIP Tablica mieszajaca z lancuchowaniem (drzewa AVL)" << endl;
-
     
     mainMenu();
     
