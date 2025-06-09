@@ -5,41 +5,42 @@
 
 using namespace std;
 
+// Prosta tablica mieszajaca z lancuchowaniem (listy powiazane)
 class HashTableChaining {
 private:
-    // Wezel listy
+   // Struktura wezla dla listy powiazanej
     struct Node {
         int key;
         int value;
         Node* next;
-        
+
         Node(int k, int v) : key(k), value(v), next(nullptr) {}
     };
-    
+
     Node** table;
     int capacity;
     int size;
     const double LOAD_FACTOR_THRESHOLD = 1.0;
-    
-    // Funkcja mieszajaca
+
+    // Prosta funkcja mieszajaca
     int hash(int key) {
         return abs(key) % capacity;
     }
-    
-    // Zmiana rozmiaru
+
+    // Zmiana rozmiaru tablicy gdy wspolczynnik wypelnienia przekroczy prog
     void resize() {
         int oldCapacity = capacity;
         Node** oldTable = table;
-        
+
         capacity *= 2;
-        table = new Node*[capacity];
+        table = new Node * [capacity];
         for (int i = 0; i < capacity; i++) {
             table[i] = nullptr;
         }
-        
+
         size = 0;
-        
-        // Przenies wszystkie elementy
+
+        // Ponowne mieszanie wszystkich elementow
         for (int i = 0; i < oldCapacity; i++) {
             Node* current = oldTable[i];
             while (current != nullptr) {
@@ -49,7 +50,7 @@ private:
                 delete temp;
             }
         }
-        
+
         delete[] oldTable;
     }
 
@@ -57,12 +58,12 @@ public:
     HashTableChaining() {
         capacity = 16;
         size = 0;
-        table = new Node*[capacity];
+        table = new Node * [capacity];
         for (int i = 0; i < capacity; i++) {
             table[i] = nullptr;
         }
     }
-    
+
     ~HashTableChaining() {
         for (int i = 0; i < capacity; i++) {
             Node* current = table[i];
@@ -74,16 +75,17 @@ public:
         }
         delete[] table;
     }
-    
-    // Wstawianie
+
+    // Wstawianie pary klucz-wartosc
     void insert(int key, int value) {
+        // Sprawdzenie czy potrzebna jest zmiana rozmiaru
         if ((double)size / capacity >= LOAD_FACTOR_THRESHOLD) {
             resize();
         }
-        
+
         int index = hash(key);
-        
-        // Sprawdz czy klucz istnieje
+
+        // Sprawdzenie czy klucz juz istnieje
         Node* current = table[index];
         while (current != nullptr) {
             if (current->key == key) {
@@ -92,45 +94,47 @@ public:
             }
             current = current->next;
         }
-        
-        // Dodaj nowy wezel na poczatek
+
+        // Dodanie nowego wezla na poczatek listy
         Node* newNode = new Node(key, value);
         newNode->next = table[index];
         table[index] = newNode;
         size++;
     }
-    
-    // Usuwanie
+
+    // Usuwanie pary klucz-wartosc
     bool remove(int key) {
         int index = hash(key);
-        
+
         Node* current = table[index];
         Node* prev = nullptr;
-        
+
         while (current != nullptr) {
             if (current->key == key) {
+                // Jesli to pierwszy wezel
                 if (prev == nullptr) {
                     table[index] = current->next;
-                } else {
+                }
+                else {
                     prev->next = current->next;
                 }
-                
+
                 delete current;
                 size--;
                 return true;
             }
-            
+
             prev = current;
             current = current->next;
         }
-        
+
         return false;
     }
-    
-    // Pobieranie wartosci
+
+    // Pobieranie wartosci dla klucza
     int get(int key) {
         int index = hash(key);
-        
+
         Node* current = table[index];
         while (current != nullptr) {
             if (current->key == key) {
@@ -138,11 +142,11 @@ public:
             }
             current = current->next;
         }
-        
+
         return -1;
     }
-    
-    // Czyszczenie
+
+    // Czyszczenie tablicy mieszajacej
     void clear() {
         for (int i = 0; i < capacity; i++) {
             Node* current = table[i];
@@ -153,17 +157,17 @@ public:
             }
             table[i] = nullptr;
         }
-        
+
         delete[] table;
         capacity = 16;
         size = 0;
-        table = new Node*[capacity];
+        table = new Node * [capacity];
         for (int i = 0; i < capacity; i++) {
             table[i] = nullptr;
         }
     }
-    
-    // Rozmiar
+
+    // Pobieranie aktualnego rozmiaru
     int getSize() {
         return size;
     }

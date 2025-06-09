@@ -5,9 +5,10 @@
 
 using namespace std;
 
+// Prosta tablica mieszajaca z adresowaniem otwartym (sondowanie liniowe)
 class HashTableOpenAddressing {
 private:
-    // Para klucz-wartosc
+    // Struktura pary klucz-wartosc
     struct Pair {
         int key;
         int value;
@@ -22,26 +23,26 @@ private:
     int size;
     const double LOAD_FACTOR_THRESHOLD = 0.7;
 
-    // Funkcja mieszajaca
+    // Prosta funkcja mieszajaca
     int hash(int key) {
         return abs(key) % capacity;
     }
 
-    // Zmiana rozmiaru tablicy
+    // Zmiana rozmiaru tablicy gdy wspolczynnik wypelnienia przekroczy prog
     void resize() {
         int oldCapacity = capacity;
         Pair* oldTable = table;
-        
+
         capacity *= 2;
         table = new Pair[capacity];
         size = 0;
-        
+
         for (int i = 0; i < oldCapacity; i++) {
             if (oldTable[i].isOccupied && !oldTable[i].isDeleted) {
                 insert(oldTable[i].key, oldTable[i].value);
             }
         }
-        
+
         delete[] oldTable;
     }
 
@@ -56,20 +57,21 @@ public:
         delete[] table;
     }
 
-    // Wstawianie klucz-wartosc
+    // Wstawianie pary klucz-wartosc
     void insert(int key, int value) {
+        // Sprawdzenie czy potrzebna jest zmiana rozmiaru
         if ((double)size / capacity >= LOAD_FACTOR_THRESHOLD) {
             resize();
         }
-        
+
         int index = hash(key);
         int i = 0;
-        
+
         // Sondowanie liniowe
         while (i < capacity) {
             int probeIndex = (index + i) % capacity;
-            
-            // Jesli miejsce puste lub usuniete
+
+            // Jesli miejsce jest puste lub oznaczone jako usuniete
             if (!table[probeIndex].isOccupied || table[probeIndex].isDeleted) {
                 table[probeIndex].key = key;
                 table[probeIndex].value = value;
@@ -78,68 +80,68 @@ public:
                 size++;
                 return;
             }
-            
-            // Jesli klucz juz istnieje
+
+            // Jesli klucz juz istnieje, aktualizuj wartosc
             if (table[probeIndex].key == key && !table[probeIndex].isDeleted) {
                 table[probeIndex].value = value;
                 return;
             }
-            
+
             i++;
         }
     }
 
-    // Usuwanie klucz-wartosc
+    // Usuwanie pary klucz-wartosc
     bool remove(int key) {
         int index = hash(key);
         int i = 0;
-        
+
         while (i < capacity) {
             int probeIndex = (index + i) % capacity;
-            
-            // Jesli miejsce puste
+
+            // Jesli miejsce jest puste, klucz nie istnieje
             if (!table[probeIndex].isOccupied) {
                 return false;
             }
-            
-            // Jesli znaleziono klucz
+
+            // Jesli klucz zostal znaleziony i nie jest usuniety
             if (table[probeIndex].key == key && !table[probeIndex].isDeleted) {
                 table[probeIndex].isDeleted = true;
                 size--;
                 return true;
             }
-            
+
             i++;
         }
-        
+
         return false;
     }
 
-    // Pobieranie wartosci
+    // Pobieranie wartosci dla klucza
     int get(int key) {
         int index = hash(key);
         int i = 0;
-        
+
         while (i < capacity) {
             int probeIndex = (index + i) % capacity;
-            
-            // Jesli miejsce puste
+
+            // Jesli miejsce jest puste, klucz nie istnieje
             if (!table[probeIndex].isOccupied) {
                 return -1;
             }
-            
-            // Jesli znaleziono klucz
+
+            // Jesli klucz zostal znaleziony i nie jest usuniety
             if (table[probeIndex].key == key && !table[probeIndex].isDeleted) {
                 return table[probeIndex].value;
             }
-            
+
             i++;
         }
-        
+
         return -1;
     }
 
-    // Czyszczenie
+    // Czyszczenie tablicy mieszajacej
     void clear() {
         delete[] table;
         capacity = 16;
@@ -147,7 +149,7 @@ public:
         table = new Pair[capacity];
     }
 
-    // Rozmiar
+    // Pobieranie aktualnego rozmiaru
     int getSize() {
         return size;
     }
