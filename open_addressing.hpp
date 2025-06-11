@@ -53,6 +53,33 @@ public:
         table = new Pair[capacity];
     }
 
+    // Konstruktor kopiuj¹cy
+    HashTableOpenAddressing(const HashTableOpenAddressing& other) {
+        capacity = other.capacity;
+        size = other.size;
+        table = new Pair[capacity];
+
+        for (int i = 0; i < capacity; i++) {
+            table[i] = other.table[i];
+        }
+    }
+
+    // Operator przypisania
+    HashTableOpenAddressing& operator=(const HashTableOpenAddressing& other) {
+        if (this != &other) {
+            delete[] table;
+
+            capacity = other.capacity;
+            size = other.size;
+            table = new Pair[capacity];
+
+            for (int i = 0; i < capacity; i++) {
+                table[i] = other.table[i];
+            }
+        }
+        return *this;
+    }
+
     ~HashTableOpenAddressing() {
         delete[] table;
     }

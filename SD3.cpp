@@ -10,6 +10,9 @@
 #include "chaining.hpp"
 #include "avl.hpp"
 
+// Lancuchuowanie usuwanie 
+// napisać we wnioskach co nie wyszlo, dlaczego nie etc
+
 using namespace std;
 
 // Generowanie losowej liczby 
@@ -33,7 +36,7 @@ void testPerformance() {
     auto fullTimeStart = chrono::high_resolution_clock::now();
 
     // Utworzenie pliku wyjsciowego
-    ofstream outFile("wyniki.xlsx");
+    ofstream outFile("wyniki_final2.xlsx");
     outFile << "Rozmiar\tAdresowanie otwarte Wstawianie (ns)\tLancuchowanie Wstawianie (ns)\tAVL Wstawianie (ns)\t"
         << "Adresowanie otwarte Usuwanie (ns)\tLancuchowanie Usuwanie (ns)\tAVL Usuwanie (ns)\n";
 
@@ -57,75 +60,82 @@ void testPerformance() {
             // Inicjalizacja generatora losowego z roznym ziarnem dla kazdego zestawu danych
             srand(time(nullptr) + dataSet);
 
-            // Generowanie losowych kluczy i wartosci
-            vector<int> keys(size);
-            vector<int> values(size);
+            // Stworzenie oryginalnych tablic o rozmiarze 'size'
+            HashTableOpenAddressing originalOpenAddressing;
+            HashTableChaining originalChaining;
+            HashTableAVL originalAVL;
+
+            // Wypełnienie oryginalnych tablic
+            vector<int> originalKeys(size);
+            vector<int> originalValues(size);
 
             for (int i = 0; i < size; i++) {
-                keys[i] = randomInt(1, size * 10);
-                values[i] = randomInt(1, 1000);
+                originalKeys[i] = randomInt(1, size * 10);
+                originalValues[i] = randomInt(1, 1000);
+
+                originalOpenAddressing.insert(originalKeys[i], originalValues[i]);
+                originalChaining.insert(originalKeys[i], originalValues[i]);
+                originalAVL.insert(originalKeys[i], originalValues[i]);
             }
 
-            // Dla kazdego powtorzenia
+            // Testowanie operacji wstawiania
             for (int r = 0; r < rep; r++) {
-                // Tworzenie tablic mieszajacych
-                HashTableOpenAddressing openAddressingTable;
-                HashTableChaining chainingTable;
-                HashTableAVL avlTable;
+                // Przygotowanie nowych kluczy do wstawienia
+                int newKey = randomInt(size * 10 + 1, size * 20);
+                int newValue = randomInt(1, 1000);
 
-                // Test operacji wstawiania dla adresowania otwartego
+                // Test wstawiania dla adresowania otwartego
+                HashTableOpenAddressing testOpenAddressing = originalOpenAddressing;
                 auto start = chrono::high_resolution_clock::now();
-                for (int i = 0; i < size; i++) {
-                    openAddressingTable.insert(keys[i], values[i]);
-                }
+                testOpenAddressing.insert(newKey, newValue);
                 auto end = chrono::high_resolution_clock::now();
                 auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-                avgOpenAddressingInsert += duration / (double)size;
+                avgOpenAddressingInsert += duration;
 
-                // Test operacji wstawiania dla lancuchowania
+                // Test wstawiania dla lancuchowania
+                HashTableChaining testChaining = originalChaining;
                 start = chrono::high_resolution_clock::now();
-                for (int i = 0; i < size; i++) {
-                    chainingTable.insert(keys[i], values[i]);
-                }
+                testChaining.insert(newKey, newValue);
                 end = chrono::high_resolution_clock::now();
                 duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-                avgChainingInsert += duration / (double)size;
+                avgChainingInsert += duration;
 
-                // Test operacji wstawiania dla AVL
+                // Test wstawiania dla AVL
+                HashTableAVL testAVL = originalAVL;
                 start = chrono::high_resolution_clock::now();
-                for (int i = 0; i < size; i++) {
-                    avlTable.insert(keys[i], values[i]);
-                }
+                testAVL.insert(newKey, newValue);
                 end = chrono::high_resolution_clock::now();
                 duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-                avgAVLInsert += duration / (double)size;
+                avgAVLInsert += duration;
+            }
 
-                // Test operacji usuwania dla adresowania otwartego
+            // Testowanie operacji usuwania
+            for (int r = 0; r < rep; r++) {
+                int keyToRemove = originalKeys[randomInt(0, size - 1)];
+
+                // Test usuwania dla adresowania otwartego
+                HashTableOpenAddressing testOpenAddressing = originalOpenAddressing;
+                auto start = chrono::high_resolution_clock::now();
+                testOpenAddressing.remove(keyToRemove);
+                auto end = chrono::high_resolution_clock::now();
+                auto duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+                avgOpenAddressingRemove += duration;
+
+                // Test usuwania dla lancuchowania
+                HashTableChaining testChaining = originalChaining;
                 start = chrono::high_resolution_clock::now();
-                for (int i = 0; i < size; i++) {
-                    openAddressingTable.remove(keys[i]);
-                }
+                testChaining.remove(keyToRemove);
                 end = chrono::high_resolution_clock::now();
                 duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-                avgOpenAddressingRemove += duration / (double)size;
+                avgChainingRemove += duration;
 
-                // Test operacji usuwania dla lancuchowania
+                // Test usuwania dla AVL
+                HashTableAVL testAVL = originalAVL;
                 start = chrono::high_resolution_clock::now();
-                for (int i = 0; i < size; i++) {
-                    chainingTable.remove(keys[i]);
-                }
+                testAVL.remove(keyToRemove);
                 end = chrono::high_resolution_clock::now();
                 duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-                avgChainingRemove += duration / (double)size;
-
-                // Test operacji usuwania dla AVL
-                start = chrono::high_resolution_clock::now();
-                for (int i = 0; i < size; i++) {
-                    avlTable.remove(keys[i]);
-                }
-                end = chrono::high_resolution_clock::now();
-                duration = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-                avgAVLRemove += duration / (double)size;
+                avgAVLRemove += duration;
             }
         }
 

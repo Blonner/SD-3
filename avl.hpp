@@ -51,6 +51,44 @@ public:
         table = new AVLTree[capacity];
     }
 
+    // Konstruktor kopiuj¹cy
+    HashTableAVL(const HashTableAVL& other) {
+        capacity = other.capacity;
+        size = other.size;
+        table = new AVLTree[capacity];
+
+        for (int i = 0; i < capacity; i++) {
+            // Skopiuj ka¿de drzewo AVL
+            vector<pair<int, int>> pairs;
+            other.table[i].getAllPairs(pairs);
+
+            for (const auto& p : pairs) {
+                table[i].insert(p.first, p.second);
+            }
+        }
+    }
+
+    // Operator przypisania
+    HashTableAVL& operator=(const HashTableAVL& other) {
+        if (this != &other) {
+            delete[] table;
+
+            capacity = other.capacity;
+            size = other.size;
+            table = new AVLTree[capacity];
+
+            for (int i = 0; i < capacity; i++) {
+                vector<pair<int, int>> pairs;
+                other.table[i].getAllPairs(pairs);
+
+                for (const auto& p : pairs) {
+                    table[i].insert(p.first, p.second);
+                }
+            }
+        }
+        return *this;
+    }
+
     ~HashTableAVL() {
         delete[] table;
     }

@@ -8,7 +8,7 @@ using namespace std;
 // Prosta tablica mieszajaca z lancuchowaniem (listy powiazane)
 class HashTableChaining {
 private:
-   // Struktura wezla dla listy powiazanej
+    // Struktura wezla dla listy powiazanej
     struct Node {
         int key;
         int value;
@@ -54,6 +54,23 @@ private:
         delete[] oldTable;
     }
 
+    // DODANA funkcja pomocnicza do kopiowania listy
+    Node* copyList(Node* head) {
+        if (head == nullptr) return nullptr;
+
+        Node* newHead = new Node(head->key, head->value);
+        Node* current = newHead;
+        Node* original = head->next;
+
+        while (original != nullptr) {
+            current->next = new Node(original->key, original->value);
+            current = current->next;
+            original = original->next;
+        }
+
+        return newHead;
+    }
+
 public:
     HashTableChaining() {
         capacity = 16;
@@ -62,6 +79,43 @@ public:
         for (int i = 0; i < capacity; i++) {
             table[i] = nullptr;
         }
+    }
+
+    // Konstruktor kopiuj¹cy
+    HashTableChaining(const HashTableChaining& other) {
+        capacity = other.capacity;
+        size = other.size;
+        table = new Node * [capacity];
+
+        for (int i = 0; i < capacity; i++) {
+            table[i] = copyList(other.table[i]);
+        }
+    }
+
+    // Operator przypisania
+    HashTableChaining& operator=(const HashTableChaining& other) {
+        if (this != &other) {
+            // Usuñ obecne dane
+            for (int i = 0; i < capacity; i++) {
+                Node* current = table[i];
+                while (current != nullptr) {
+                    Node* temp = current;
+                    current = current->next;
+                    delete temp;
+                }
+            }
+            delete[] table;
+
+            // Skopiuj nowe dane
+            capacity = other.capacity;
+            size = other.size;
+            table = new Node * [capacity];
+
+            for (int i = 0; i < capacity; i++) {
+                table[i] = copyList(other.table[i]);
+            }
+        }
+        return *this;
     }
 
     ~HashTableChaining() {
